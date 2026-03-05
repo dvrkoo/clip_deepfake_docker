@@ -1,4 +1,4 @@
-# to_nicco Docker Runtime
+# clip_deepfake_docker Runtime
 
 This adds a clean Docker runtime for the **full finetuned checkpoint** model.
 
@@ -31,19 +31,40 @@ mkdir -p input output logs
 ### CPU
 
 ```bash
-docker compose up to-nicco-cpu
+docker compose up clip-deepfake-cpu
 ```
 
 ### CUDA
 
 ```bash
-docker compose --profile cuda up to-nicco-cuda
+docker compose --profile cuda up clip-deepfake-cuda
 ```
 
 ### Apple Silicon profile image
 
 ```bash
-docker compose --profile mps up to-nicco-mps
+docker compose --profile mps up clip-deepfake-mps
+```
+
+## Prebuilt images (GHCR)
+
+Images are published from GitHub Actions on pushes to `main`.
+
+Base image path:
+
+```text
+ghcr.io/<owner>/<repo>/clip-deepfake
+```
+
+Main tags:
+- `latest` (CPU)
+- `latest-cuda`
+- `latest-mps`
+
+Example:
+
+```bash
+docker pull ghcr.io/<owner>/<repo>/clip-deepfake:latest
 ```
 
 ## Environment variables
@@ -63,3 +84,4 @@ docker compose --profile mps up to-nicco-mps
 - First run may download CLIP backbone weights into `CLIP_DOWNLOAD_ROOT`.
 - Dockerfiles use BuildKit cache mounts for faster rebuilds.
 - Supported input extensions: `.jpg`, `.jpeg`, `.png`, `.bmp`, `.webp`.
+- CI runs unit tests on every push/PR and publishes docker images from `main`.

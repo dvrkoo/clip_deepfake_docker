@@ -1,9 +1,9 @@
 services:
-  to-nicco-cpu:
+  clip-deepfake-cpu:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: to-nicco-cpu
+    container_name: clip-deepfake-cpu
     volumes:
       - ./input:/data/input
       - ./output:/data/output
@@ -21,11 +21,11 @@ services:
       - CLIP_DOWNLOAD_ROOT=/data/models/clip_cache
     restart: unless-stopped
 
-  to-nicco-cuda:
+  clip-deepfake-cuda:
     build:
       context: .
       dockerfile: Dockerfile.cuda
-    container_name: to-nicco-cuda
+    container_name: clip-deepfake-cuda
     volumes:
       - ./input:/data/input
       - ./output:/data/output
@@ -47,12 +47,12 @@ services:
     profiles:
       - cuda
 
-  to-nicco-mps:
+  clip-deepfake-mps:
     build:
       context: .
       dockerfile: Dockerfile.mps
     platform: linux/arm64
-    container_name: to-nicco-mps
+    container_name: clip-deepfake-mps
     volumes:
       - ./input:/data/input
       - ./output:/data/output

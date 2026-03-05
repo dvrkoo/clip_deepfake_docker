@@ -247,7 +247,7 @@ def queue_existing_files() -> None:
 
 def main() -> None:
     device = resolve_device()
-    logger.info("Starting to_nicco docker app")
+    logger.info("Starting clip_deepfake_docker app")
     logger.info("Watch folder: %s", WATCH_FOLDER)
     logger.info("Output folder: %s", OUTPUT_FOLDER)
     logger.info("Model ckpt: %s", MODEL_CKPT)
