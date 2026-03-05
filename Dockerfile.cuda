@@ -1,0 +1,51 @@
+# syntax=docker/dockerfile:1.7
+FROM nvidia/cuda:12.8.1-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    python3.11 \
+    python3.11-dev \
+    python3-pip \
+    build-essential \
+    git \
+    curl \
+    libglib2.0-0 \
+    libgl1 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+COPY requirements.txt .
+COPY requirements-no-torch.txt .
+
+RUN --mount=type=cache,target=/root/.cache/pip pip install --no-cache-dir uv
+
+RUN --mount=type=cache,target=/root/.cache/uv uv pip install --system --no-cache \
+      --index-url https://download.pytorch.org/whl/cu128 \
+      torch torchvision torchaudio
+
+RUN --mount=type=cache,target=/root/.cache/uv uv pip install --system --no-cache -r requirements-no-torch.txt
+
+COPY . .
+
+ENV WATCH_FOLDER=/data/input
+ENV OUTPUT_FOLDER=/data/output
+ENV LOG_FILE=/data/logs/app.log
+ENV MODEL_CKPT=/data/models/model_best.pth
+ENV ARCH=CLIP:ViT-L/14
+ENV THRESHOLD=0.5
+ENV BATCH_SIZE=64
+ENV CLIP_DOWNLOAD_ROOT=/data/models/clip_cache
+ENV AUTO_FALLBACK_CPU_ON_UNSUPPORTED_CUDA=true
+
+RUN mkdir -p /data/input /data/output /data/logs /data/models /data/models/clip_cache
+
+VOLUME ["/data/input", "/data/output", "/data/logs", "/data/models"]
+
+CMD ["python", "docker_app.py"]

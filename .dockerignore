@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+.git/
+.gitignore
+
+datasets/
+ckpt/
+output/
+logs/
+input/
+
+*.pth
+*.pt

@@ -1,0 +1,73 @@
+services:
+  to-nicco-cpu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: to-nicco-cpu
+    volumes:
+      - ./input:/data/input
+      - ./output:/data/output
+      - ./logs:/data/logs
+      - ./ckpt/clip_vitl14_mediaeval_ftval4k_randomfc--1:/data/models
+    environment:
+      - WATCH_FOLDER=/data/input
+      - OUTPUT_FOLDER=/data/output
+      - LOG_FILE=/data/logs/app.log
+      - MODEL_CKPT=/data/models/model_best.pth
+      - ARCH=CLIP:ViT-L/14
+      - THRESHOLD=0.5
+      - BATCH_SIZE=32
+      - FORCE_CPU=true
+      - CLIP_DOWNLOAD_ROOT=/data/models/clip_cache
+    restart: unless-stopped
+
+  to-nicco-cuda:
+    build:
+      context: .
+      dockerfile: Dockerfile.cuda
+    container_name: to-nicco-cuda
+    volumes:
+      - ./input:/data/input
+      - ./output:/data/output
+      - ./logs:/data/logs
+      - ./ckpt/clip_vitl14_mediaeval_ftval4k_randomfc--1:/data/models
+    environment:
+      - WATCH_FOLDER=/data/input
+      - OUTPUT_FOLDER=/data/output
+      - LOG_FILE=/data/logs/app.log
+      - MODEL_CKPT=/data/models/model_best.pth
+      - ARCH=CLIP:ViT-L/14
+      - THRESHOLD=0.5
+      - BATCH_SIZE=64
+      - CLIP_DOWNLOAD_ROOT=/data/models/clip_cache
+      - AUTO_FALLBACK_CPU_ON_UNSUPPORTED_CUDA=true
+      - NVIDIA_VISIBLE_DEVICES=all
+    gpus: all
+    restart: unless-stopped
+    profiles:
+      - cuda
+
+  to-nicco-mps:
+    build:
+      context: .
+      dockerfile: Dockerfile.mps
+    platform: linux/arm64
+    container_name: to-nicco-mps
+    volumes:
+      - ./input:/data/input
+      - ./output:/data/output
+      - ./logs:/data/logs
+      - ./ckpt/clip_vitl14_mediaeval_ftval4k_randomfc--1:/data/models
+    environment:
+      - WATCH_FOLDER=/data/input
+      - OUTPUT_FOLDER=/data/output
+      - LOG_FILE=/data/logs/app.log
+      - MODEL_CKPT=/data/models/model_best.pth
+      - ARCH=CLIP:ViT-L/14
+      - THRESHOLD=0.5
+      - BATCH_SIZE=32
+      - FORCE_CPU=false
+      - CLIP_DOWNLOAD_ROOT=/data/models/clip_cache
+    restart: unless-stopped
+    profiles:
+      - mps
