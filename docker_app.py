@@ -38,11 +38,13 @@ STD_CLIP = [0.26862954, 0.26130258, 0.27577711]
 os.environ.setdefault("CLIP_DOWNLOAD_ROOT", CLIP_DOWNLOAD_ROOT)
 os.environ.setdefault("LOG_FILE", LOG_FILE)
 
-import logger_config
-
 os.makedirs(WATCH_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+log_dir = os.path.dirname(LOG_FILE)
+if log_dir:
+    os.makedirs(log_dir, exist_ok=True)
+
+import logger_config
 
 transform = transforms.Compose(
     [

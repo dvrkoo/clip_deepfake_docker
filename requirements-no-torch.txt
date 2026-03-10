@@ -4,3 +4,4 @@ watchdog==3.0.0
 tqdm==4.66.4
 ftfy==6.2.0
 regex==2024.5.15
+packaging==24.2
