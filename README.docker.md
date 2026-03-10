@@ -53,7 +53,7 @@ Images are published from GitHub Actions on pushes to `main`.
 Base image path:
 
 ```text
-ghcr.io/<owner>/<repo>/clip-deepfake
+ghcr.io/dvrkoo/clip_deepfake_docker/clip-deepfake
 ```
 
 Main tags:
@@ -64,7 +64,7 @@ Main tags:
 Example:
 
 ```bash
-docker pull ghcr.io/<owner>/<repo>/clip-deepfake:latest
+docker pull ghcr.io/dvrkoo/clip_deepfake_docker/clip-deepfake:latest
 ```
 
 ## Environment variables

@@ -7,11 +7,11 @@ on:
     branches: [main, develop]
 
 env:
-  IMAGE_NAME: clip-deepfake
+  DOCKER_IMAGE_NAME: clip-deepfake
   REGISTRY: ghcr.io
 
 jobs:
-  unit-tests:
+  test-unit:
     name: Run Unit Tests
     runs-on: ubuntu-latest
 
@@ -38,7 +38,7 @@ jobs:
   docker-smoke:
     name: Build CPU Image Smoke Test
     runs-on: ubuntu-latest
-    needs: unit-tests
+    needs: test-unit
 
     steps:
       - name: Checkout
@@ -54,7 +54,7 @@ jobs:
           file: ./Dockerfile
           push: false
           load: true
-          tags: ${{ env.IMAGE_NAME }}:smoke
+          tags: ${{ env.DOCKER_IMAGE_NAME }}:smoke
           cache-from: type=gha,scope=cpu-smoke
           cache-to: type=gha,mode=max,scope=cpu-smoke
 
@@ -67,14 +67,14 @@ jobs:
             -v $(pwd)/logs:/data/logs \
             -v $(pwd)/models:/data/models \
             -e FORCE_CPU=true \
-            ${{ env.IMAGE_NAME }}:smoke
+            ${{ env.DOCKER_IMAGE_NAME }}:smoke
           sleep 8
           docker ps -q -f name=clip-deepfake-smoke
           docker logs clip-deepfake-smoke
           docker stop clip-deepfake-smoke
           docker rm clip-deepfake-smoke
 
-  publish-images:
+  docker-publish:
     name: Publish Docker Images
     runs-on: ubuntu-latest
     needs: docker-smoke
@@ -119,7 +119,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}
           tags: |
             type=raw,value=latest${{ matrix.variant.suffix }},enable={{is_default_branch}}
             type=ref,event=branch,suffix=${{ matrix.variant.suffix }}
