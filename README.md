@@ -12,6 +12,10 @@ This repository is intentionally focused on operations (build, run, deploy), not
   - `<image_stem>_result.txt`
   - `predictions.csv`
 
+Checkpoint loading supports both formats:
+- full model checkpoint (for example `model_best.pth` with full state)
+- fc-only checkpoint (for example `pretrained_weights/fc_weights.pth` with `weight` and `bias`)
+
 ## Prebuilt images (GHCR)
 
 Published by GitHub Actions on pushes to `main`.
@@ -67,6 +71,22 @@ Run Apple Silicon profile image:
 ```bash
 docker compose --profile mps up clip-deepfake-mps
 ```
+
+## Fast local iteration (no rebuild per code edit)
+
+Use the `dev` profile services, which bind-mount the repo into `/app`:
+
+```bash
+docker compose --profile dev up clip-deepfake-cpu-dev
+```
+
+CUDA dev service:
+
+```bash
+docker compose --profile dev --profile cuda up clip-deepfake-cuda-dev
+```
+
+After editing Python files, just restart the container. No image rebuild is needed unless dependencies or Dockerfiles changed.
 
 ## Run prebuilt image directly
 

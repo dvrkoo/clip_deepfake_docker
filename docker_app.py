@@ -13,14 +13,21 @@ from torchvision import transforms
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from checkpoint_utils import load_checkpoint_into_model
 from models import get_model
 
 logger = logging.getLogger(__name__)
 
-WATCH_FOLDER = os.getenv("WATCH_FOLDER", "./input" if not os.path.exists("/data") else "/data/input")
-OUTPUT_FOLDER = os.getenv("OUTPUT_FOLDER", "./output" if not os.path.exists("/data") else "/data/output")
+WATCH_FOLDER = os.getenv(
+    "WATCH_FOLDER", "./input" if not os.path.exists("/data") else "/data/input"
+)
+OUTPUT_FOLDER = os.getenv(
+    "OUTPUT_FOLDER", "./output" if not os.path.exists("/data") else "/data/output"
+)
 LOG_FILE = os.getenv("LOG_FILE", "./logs/app.log")
-MODEL_CKPT = os.getenv("MODEL_CKPT", "./ckpt/clip_vitl14_mediaeval_ftval4k_randomfc--1/model_best.pth")
+MODEL_CKPT = os.getenv(
+    "MODEL_CKPT", "./ckpt/clip_vitl14_mediaeval_ftval4k_randomfc--1/model_best.pth"
+)
 ARCH = os.getenv("ARCH", "CLIP:ViT-L/14")
 THRESHOLD = float(os.getenv("THRESHOLD", "0.5"))
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", "32"))
@@ -28,7 +35,9 @@ FORCE_CPU = os.getenv("FORCE_CPU", "false").lower() == "true"
 AUTO_FALLBACK_CPU_ON_UNSUPPORTED_CUDA = (
     os.getenv("AUTO_FALLBACK_CPU_ON_UNSUPPORTED_CUDA", "true").lower() == "true"
 )
-PROCESS_EXISTING_ON_START = os.getenv("PROCESS_EXISTING_ON_START", "true").lower() == "true"
+PROCESS_EXISTING_ON_START = (
+    os.getenv("PROCESS_EXISTING_ON_START", "true").lower() == "true"
+)
 CLIP_DOWNLOAD_ROOT = os.getenv("CLIP_DOWNLOAD_ROOT", "/data/models/clip_cache")
 SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 
@@ -48,7 +57,6 @@ import logger_config
 
 transform = transforms.Compose(
     [
-        transforms.Resize(256, interpolation=Image.Resampling.BILINEAR),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize(mean=MEAN_CLIP, std=STD_CLIP),
@@ -63,13 +71,17 @@ def resolve_device() -> torch.device:
     device = torch.device(
         "cuda"
         if torch.cuda.is_available()
-        else "mps" if torch.backends.mps.is_available() else "cpu"
+        else "mps"
+        if torch.backends.mps.is_available()
+        else "cpu"
     )
 
     if device.type == "cuda":
         capability = torch.cuda.get_device_capability()
         gpu_arch = f"sm_{capability[0]}{capability[1]}"
-        supported_arches = {arch for arch in torch.cuda.get_arch_list() if arch.startswith("sm_")}
+        supported_arches = {
+            arch for arch in torch.cuda.get_arch_list() if arch.startswith("sm_")
+        }
         if gpu_arch not in supported_arches and AUTO_FALLBACK_CPU_ON_UNSUPPORTED_CUDA:
             logger.warning(
                 "GPU arch %s not supported by this torch build (%s); falling back to CPU",
@@ -86,16 +98,11 @@ def load_model(device: torch.device):
         raise FileNotFoundError(f"MODEL_CKPT not found: {MODEL_CKPT}")
 
     model = get_model(ARCH)
-    ckpt_obj = torch.load(MODEL_CKPT, map_location="cpu")
-
-    if isinstance(ckpt_obj, dict) and "model" in ckpt_obj:
-        logger.info("Loading full checkpoint state from key 'model'")
-        model.load_state_dict(ckpt_obj["model"], strict=True)
-    elif isinstance(ckpt_obj, dict):
-        logger.info("Loading checkpoint as direct state_dict")
-        model.load_state_dict(ckpt_obj, strict=True)
-    else:
-        raise ValueError("Unsupported checkpoint format")
+    checkpoint_mode, checkpoint_msg = load_checkpoint_into_model(
+        model, MODEL_CKPT, strict=True
+    )
+    logger.info("%s", checkpoint_msg)
+    logger.info("Checkpoint mode: %s", checkpoint_mode)
 
     model = model.to(device)
     model.eval()
@@ -175,8 +182,12 @@ def write_result(path: str, prob: float, label: int, device: torch.device) -> No
     with open(csv_path, "a", newline="", encoding="utf-8") as csv_file:
         writer = csv.writer(csv_file)
         if not file_exists:
-            writer.writerow(["file", "fake_probability", "label", "threshold", "device", "arch"])
-        writer.writerow([Path(path).name, f"{prob:.6f}", label, THRESHOLD, str(device), ARCH])
+            writer.writerow(
+                ["file", "fake_probability", "label", "threshold", "device", "arch"]
+            )
+        writer.writerow(
+            [Path(path).name, f"{prob:.6f}", label, THRESHOLD, str(device), ARCH]
+        )
 
 
 def cleanup_cache() -> None:
