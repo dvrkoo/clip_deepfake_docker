@@ -1,6 +1,11 @@
 from pathlib import Path
 
 import docker_app
+import numpy as np
+import torch
+from PIL import Image
+from torchvision import transforms
+import torchvision.transforms.functional as TF
 
 
 def test_is_supported_image_accepts_expected_extensions():
@@ -52,3 +57,28 @@ def test_queue_existing_files_only_supported(tmp_path, monkeypatch):
         queued.append(Path(docker_app.file_queue.get_nowait()).name)
 
     assert sorted(queued) == ["a.jpg", "b.png"]
+
+
+def test_transform_matches_to_nicco_submit_preprocessing():
+    img_array = np.zeros((300, 500, 3), dtype=np.uint8)
+    img_array[..., 0] = 12
+    img_array[..., 1] = 128
+    img_array[..., 2] = 245
+    img = Image.fromarray(img_array, mode="RGB")
+
+    reference_transform = transforms.Compose(
+        [
+            transforms.Lambda(
+                lambda pil_img: TF.resize(pil_img, 256, interpolation=Image.BILINEAR)
+            ),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=docker_app.MEAN_CLIP, std=docker_app.STD_CLIP),
+        ]
+    )
+
+    out_docker = docker_app.transform(img)
+    out_reference = reference_transform(img)
+
+    assert out_docker.shape == (3, 224, 224)
+    assert torch.allclose(out_docker, out_reference, atol=0, rtol=0)

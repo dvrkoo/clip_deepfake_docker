@@ -10,6 +10,7 @@ from typing import List
 import torch
 from PIL import Image
 from torchvision import transforms
+import torchvision.transforms.functional as TF
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
@@ -57,6 +58,9 @@ import logger_config
 
 transform = transforms.Compose(
     [
+        transforms.Lambda(
+            lambda img: TF.resize(img, 256, interpolation=Image.BILINEAR)
+        ),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize(mean=MEAN_CLIP, std=STD_CLIP),
