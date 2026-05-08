@@ -104,6 +104,25 @@ Inference preprocessing matches the original `to_nicco/submit.py` pipeline:
 - convert to tensor
 - normalize with official CLIP mean/std
 
+## Test images
+
+Sample test images are available from Google Drive:
+
+```text
+https://drive.google.com/drive/folders/1Vr45bMxPdrrVyBPTW_c6Elp2-yJc_6iL?usp=sharing
+```
+
+For a quick black-box check, download a few images from that folder and place them in `input/` while the container is running. The app will automatically write the corresponding `_result.txt` files and update `output/predictions.csv`.
+
+If the downloaded folder preserves labeled validation subfolders, keep this layout for local validation checks:
+
+```text
+datasets/
+└── val/
+    ├── 0_real/
+    └── 1_fake/
+```
+
 ## Prebuilt images (GHCR)
 
 Published by GitHub Actions on pushes to `main`.
